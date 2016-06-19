@@ -1,7 +1,6 @@
 package br.com.avaliacao.controllers;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -12,8 +11,6 @@ import javax.servlet.http.HttpServletResponse;
 import br.com.avaliacao.bean.Usuario;
 import br.com.avaliacao.business.AutenticaoBusiness;
 import br.com.avaliacao.exception.BusinessException;
-import br.com.avaliacao.util.Util;
-import static br.com.avaliacao.util.TagsHTML.*;
 
 @WebServlet(urlPatterns="/AutenticacaoController")
 public class AutenticacaoController extends HttpServlet {
@@ -29,47 +26,33 @@ public class AutenticacaoController extends HttpServlet {
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		
-		PrintWriter writer = resp.getWriter();        
-		resp.setContentType("text/html");
-		Util.criarCabecalho(writer);
-		
 		try {
 			
 			String acao = req.getParameter("acao");
 			
 			if (MOSTRAR_FORMULARIO.equals(acao)){
-				mostrarFormularioLogin(writer, req, resp);
+				mostrarFormularioLogin(req, resp);
 			
 			}else if(EFETUAR_LOGIN.equals(acao)){
-				efetuarLogin(writer, req, resp);
+				efetuarLogin(req, resp);
 			}else if(EFETUAR_LOGOUT.equals(acao)){
-				efetuarLogout(writer, req, resp);
+				efetuarLogout(req, resp);
 			}
 			
 		}catch (BusinessException e) {
-			mostrarFormularioLogin(writer, req, resp);
-			writer.println("<h3><font color='red'>" + e.getMessage() + "</font></h3>");
+			req.setAttribute("msgErro", e.getMessage());
+			mostrarFormularioLogin(req, resp);
 		}catch (Exception e) {
-			writer.println("<h1>" + e.getMessage() + "</h1>");
-		}finally{
-			writer.println(_BODY);
-	        writer.println(_HTML);
-			writer.close();
+			e.printStackTrace();
 		}
 		
 	}
 	
-	private void mostrarFormularioLogin(PrintWriter writer, HttpServletRequest req, HttpServletResponse resp) {
-		
-		writer.println("<form action='AutenticacaoController?acao=efetuarLogin' method='POST'>");
-		writer.println("<p><label>Login:</label><input type='text' name='login' /></p>");
-		writer.println("<p><label>Senha:</label><input type='password' name='senha' /></p>");
-		writer.println("<p><input type='submit' value='Logar' /></p>");
-		writer.println("</form>");
-		
+	private void mostrarFormularioLogin(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		req.getRequestDispatcher("paginas/login.jsp").forward(req, resp);
 	}
 
-	private void efetuarLogin(PrintWriter writer, HttpServletRequest req, HttpServletResponse resp) throws Exception {
+	private void efetuarLogin(HttpServletRequest req, HttpServletResponse resp) throws Exception {
 		
 		String nome 		= req.getParameter("login");
 		String senha 		= req.getParameter("senha");
@@ -90,7 +73,7 @@ public class AutenticacaoController extends HttpServlet {
 			throw new BusinessException("Necessário informar a senha!");
 	}
 	
-	private void efetuarLogout(PrintWriter writer, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private void efetuarLogout(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		req.getSession().invalidate();
 		resp.sendRedirect("inicio");
 	}
